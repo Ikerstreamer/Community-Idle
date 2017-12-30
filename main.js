@@ -22,7 +22,6 @@ function get_save(name) {
 //game loop
 setInterval(function () {
   document.getElementById("money").innerHTML="You have " + player.buttons + " buttons."
-  if(player.buttons>=25)document.getElementById("auto1").style.display = "inline-block"
 }, 50);
 //autosave
 setInterval(function () {
