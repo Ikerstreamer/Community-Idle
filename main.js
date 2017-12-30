@@ -15,6 +15,10 @@ function get_save(name) {
     }
 }
 
+//game loop
+setInterval(function () {
+document.getElementById("money").innerHTML="You have " + player.buttons + " buttons."
+}, 50);
 //autosave
 setInterval(function () {
     set_save("autosave",player)
