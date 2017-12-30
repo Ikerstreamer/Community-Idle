@@ -34,3 +34,5 @@ var save_data = get_save('autosave');
 if (save_data) {
   player = save_data;
 }
+
+//test
