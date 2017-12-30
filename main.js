@@ -1,4 +1,5 @@
 function ButtonClick()
 {
-window.alert("Something Happened");
+player.buttons++
 }
+var player = {buttons:0}
