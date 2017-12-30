@@ -1,9 +1,13 @@
 function ButtonClick()
 {
   player.buttons++
+  player.clicks++
   document.getElementById("money").innerHTML="You have " + player.buttons + " buttons."
 }
-var player = {buttons:0}
+var player = {
+  buttons:0,
+  clicks: 0
+}
 
 function set_save(name, value) {
     localStorage.setItem(name, btoa(JSON.stringify(value, function(k, v) { return (v === Infinity) ? "Infinity" : v; })))
