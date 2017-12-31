@@ -6,9 +6,21 @@
   <script type="text/javascript" src="main.js"></script>
   <title>Community Idle</title>
 </head>
-<body>
-  <button onclick="ButtonClick()">A button that definitely does something</button>
-  <div id="money">You have 0 buttons.</div>
-  <button onclick="saveGame()">save game</button>
+<body onload="init()">
+  <button onclick="set_save('autosave',player)">save game</button>
+  <span id="shardsarea" class="hidden"><br>Button Shards: <b id="shardsbox">0</b></span>
+  <span id="fragsarea" class="hidden"><br>Button Fragments: <b id="fragsbox">0</b></span>
+  <table>
+    <tr id="row">
+      <td>
+        <div onclick="ButtonClick(0)" id="firstbutton" class="button">
+          Create a new button<br>
+          Power: <span class="power">1.0x</span><br>
+          Time: <span class="time">5.0</span>s<br>
+          <span class="timeleft">0.0</span>/<span class="time">5.0</span>
+        </div>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

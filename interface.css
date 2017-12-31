@@ -1,10 +1,25 @@
-button {
-    height: 100px;
-    width: 150px;
-    font-size: 16px;
-}
-
 body {
-   margin-top: 5%;
+    margin: 2%;
     horizontal-align: middle;
 }
+
+.hidden {
+    display: none;
+}
+
+.button {
+    border-style: solid;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #ccc;
+    cursor: pointer;
+    width: 150px;
+    text-align: center;
+}
+
+.disabled {
+    background-color: #999;
+    cursor: default;
+}
+
+
