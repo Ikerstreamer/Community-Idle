@@ -33,12 +33,25 @@ function ButtonClick(id)
         }
       ,button.speed/speedup)
       break;
+      case "speed":
+          setTimeout(
+        function(){
+          try{
+            setClicked(button,false)
+            player.buttons[button.target].speed*=0.95^button.power
+          }catch(error){
+            console.error(error)
+          }
+        }
+      ,button.speed/speedup)
+          break;
     default:
       console.error("unrecognized type: "+button.type)
       break;
   }
   setClicked(button,true)
 }
+
 function setClicked(button,disable){
   if(disable){
     button.disabled=true
@@ -51,13 +64,17 @@ function setClicked(button,disable){
     button.timeupdate=false
   }
 }
+
 function randomButton(power){
   var ret;
-  if(player.buttonsmade<1){ //first 3 buttons made are fixed
+  if(player.buttonsmade<2){ //first 3 buttons made are fixed
     switch(player.buttonsmade){
       case 0:
         ret={type:"shards",speed:1000,power:power}
         show("shardsarea")
+        break
+        case 1:
+        ret={type:"speed",speed:3000,power:power,target:-1}
         break
       default:
         console.log("Um.")
@@ -69,26 +86,57 @@ function randomButton(power){
   ret.element=renderButton(ret) //at some point: skip rendering buttons that won't be seen
   return ret
 }
+
 function renderButton(button){
   var elem=document.createElement("div")
   elem.classList=["button"]
   elem.onclick=function(){ButtonClick(button.id)}
   var desc;
+    var special = "";
   switch(button.type){
     case "shards":
       desc="Create button shards"
-      break;
+      break
+      case "speed":
+      desc="Upgrade button speed"
+      special='<br><button onclick="SelectTarget(button.id)">Select target</button>'
+      break
   }
-  elem.innerHTML=desc+'<br>Power: <span class="speed">'+button.power.toFixed(1)+'</span>x<br>Speed: <span class="time">'+(button.speed/1000).toFixed(1)+'</span>s<br><span class="timeleft">0.0</span>/<span class="time">'+(button.speed/1000).toFixed(1)+'</span>'
+  elem.innerHTML=desc+'<br>Power: <span class="speed">'+button.power.toFixed(1)+'</span>x<br>Speed: <span class="time">'+(button.speed/1000).toFixed(1)+'</span>s<br><span class="timeleft">0.0</span>/<span class="time">'+(button.speed/1000).toFixed(1)+'</span>'+special
   var td=document.createElement("td")
   td.appendChild(elem)
   document.getElementById("row").appendChild(td)
   return elem
 }
 
+function SelectTarget(id){
+switch(player.buttons[id].type)
+{
+    case "speed":
+        var newtarget=-1;
+        for(i=0;i<buttons.Length;i++)
+        {
+         if(buttons[i].id!=id)buttons[i].element.addEventListener("click",function(){newtarget=buttons[i].id})
+        }
+        x = setInterval(function(){
+        if(newtarget>-1)
+        {
+        for(i=0;i<buttons.Length;i++)
+        {
+         if(buttons[i].id!=id)buttons[i].element.removeEventListener("click",function(){newtarget=buttons[i].id})
+        }
+            clearInterval(x)
+        }
+        },50)
+        buttons[id].target=newtarget;
+        break;
+}
+}
+
 function show(thing){
   document.getElementById(thing).classList.remove("hidden")
 }
+
 function update(set,to){
   document.getElementById(set).innerHTML=to
 }
