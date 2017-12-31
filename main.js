@@ -14,6 +14,7 @@ function ButtonClick(id)
             newbutton.id=player.buttons.length
             player.buttons.push(newbutton)
             player.buttonsmade++
+            button.speed++
           }catch(error){
             console.error(error)
           }
@@ -38,7 +39,7 @@ function ButtonClick(id)
         function(){
           try{
             setClicked(button,false)
-            player.buttons[button.target].speed*=0.95^button.power
+            player.buttons[button.target].speed*=0.95**button.power
           }catch(error){
             console.error(error)
           }
