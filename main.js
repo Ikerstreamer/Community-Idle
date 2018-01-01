@@ -31,6 +31,7 @@ function ButtonClick(id) {
                             console.error(error);
                         }
                     }, button.speed / speedup);
+                    setClicked(button,true);
                     break;
                 case "shards":
                     setTimeout(function() {
@@ -42,23 +43,32 @@ function ButtonClick(id) {
                             console.error(error);
                         }
                     }, button.speed / speedup);
+                    setClicked(button,true);
                     break;
                 case "speed":
+                    if(button.target>-1) {
+                      var target=player.buttons[button.target];
+                        if(target.speedCost<=player.shards) {
                     setTimeout(function() {
                         try {
                             setClicked(button, false);
-                            player.buttons[button.target].speed *= Math.pow(0.95 , button.power);
-                            updateButtonStats(player.buttons[button.target]);
+                            player.shards -= target.speedCost;
+                            target.speedCost*=1.1;
+                            target.speed *= Math.pow(0.95 , button.power);
+                            updateButtonStats(target);
+                            update("shardsbox",player.shards.toFixed(1));
                         } catch (error) {
                             console.error(error);
                         }
                     }, button.speed / speedup);
+                    setClicked(button,true);
+                        }
+                    }
                     break;
                 default:
                     console.error("unrecognized type: " + button.type);
                     break;
             }
-                setClicked(button, true);
             break;
     }
 }
@@ -83,7 +93,9 @@ function randomButton(power) {
             case 0:
                 ret = {
                     type: "shards",
-                    speed: 1000,
+                    speed: 2000,
+                    speedCost: 10,
+                    powerCost: 25,
                     power: power
                 };
                 show("shardsarea");
@@ -91,7 +103,9 @@ function randomButton(power) {
             case 1:
                 ret = {
                     type: "speed",
-                    speed: 3000,
+                    speed: 3500,
+                    speedCost: 20,
+                    powerCost: 35,
                     power: power,
                     target: -1
                 };
@@ -102,19 +116,23 @@ function randomButton(power) {
     } else {
         var options = [{
             type: "shards",
-            speed: 1000 / power,
+            speed: 2000 / power,
+            speedCost: 10,
+            powerCost: 25,
             power: power*(1+(Math.random()*0.50-0.25)),
         },{
             type: "speed",
-            speed: 3000 / power,
+            speed: 3500 / power,
+            speedCost: 20,
+            powerCost: 35,
             power: power*(1+(Math.random()*0.50-0.25)),
             target: -1
         }]
-        var ratio = [3,1];
+        var ratio = [7,1];
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
-        for (check=0;rand<ratio[check];check++) rand -= ratio[i];
+        for (check=0;rand>ratio[check];check++) rand -= ratio[i];
         ret = options[check];
         //todo: add more button types
         show("shardsarea");
@@ -129,10 +147,12 @@ function renderButton(button) {
     var desc;
     var line5;
     var ability = false;
+    var row;
     switch (button.type) {
         case "shards":
             desc = "Create button shards";
             line5='-';
+            row = "rowshard";
             break;
         case "speed":
             desc = "Upgrade button speed";
@@ -140,14 +160,15 @@ function renderButton(button) {
             ability = function() {
                 SelectTarget(button.id);
             };
+            row = "rowspeed";
             break;
     }
-    elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) + '</span>x<br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) + '</span>s<br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
+    elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) +'x ('+ button.powerCost.toFixed(1) +')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) +'s ('+ button.speedCost.toFixed(1) +')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
     if (ability) elem.getElementsByClassName("target")[0].onclick = ability;
         elem.onclick = function() {ButtonClick(button.id);};
     var td = document.createElement("td");
     td.appendChild(elem);
-    document.getElementById("row").appendChild(td);
+    document.getElementById(row).appendChild(td);
     return elem;
 }
 
@@ -171,9 +192,9 @@ function update(set, to) {
 
 function updateButtonStats(button)
 {
-    button.element.getElementsByClassName("time")[0].innerHTML=(button.speed / 1000).toFixed(1);
+    button.element.getElementsByClassName("time")[0].innerHTML=(button.speed / 1000).toFixed(1)+'s ('+button.speedCost.toFixed(1)+')';
     button.element.getElementsByClassName("time")[1].innerHTML=(button.speed / 1000).toFixed(1);
-    button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2);    
+    button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2)+'x ('+button.powerCost.toFixed(1)+')';    
 }
 
 function set_save(name, value) {
@@ -196,7 +217,9 @@ function init() {
         buttons: [{
                 type: "create",
                 speed: 5000,
+            speedCost: 25,
                 power: 1.0,
+            powerCost: 50,
                 disabled: false,
                 id: 0,
                 element: document.getElementById("firstbutton")
