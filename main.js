@@ -1,3 +1,4 @@
+var speedup = 1; //set to 1 for normal speed. Change for testing
 function ButtonClick(id) {
     var button = player.buttons[id];
     switch (player.mode.name) {
@@ -15,7 +16,6 @@ function ButtonClick(id) {
         case "click":
             if (button.disabled) return;
             player.clicks++;
-            var speedup = 1; //set to 1 for normal speed
             switch (button.type) {
                 case "create": //create a button
                     setTimeout(function() {
@@ -25,7 +25,7 @@ function ButtonClick(id) {
                             newbutton.id = player.buttons.length;
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
-                            button.speed*= 1.1;
+                            button.speed*=Math.pow(1.25,player.buttonsmade);
                             updateButtonStats(button);  
                         } catch (error) {
                             console.error(error);
@@ -47,23 +47,11 @@ function ButtonClick(id) {
                     break;
                 case "speed":
                     if(button.target>-1) {
-                      var target=player.buttons[button.target];
-                        if(target.speedCost<=player.shards) {
-                    setTimeout(function() {
-                        try {
-                            setClicked(button, false);
-                            player.shards -= target.speedCost;
-                            target.speedCost*=1.1;
-                            target.speed *= Math.pow(0.95 , button.power);
-                            updateButtonStats(target);
-                            update("shardsbox",player.shards.toFixed(1));
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    }, button.speed / speedup);
+                        var target = player.buttons[button.target];
+                    button.shardPerSec=(target.speedCost/button.speed)*1000;
+                    button.shardUse+=target.speedCost;
                     setClicked(button,true);
                         }
-                    }
                     break;
                 default:
                     console.error("unrecognized type: " + button.type);
@@ -80,9 +68,20 @@ function setClicked(button, disable) {
         button.time = 0;
         button.timeupdate = true;
     } else {
+        switch(button.type) {
+            case "speed":
+            var target=player.buttons[button.target];
+            button.shardUse = false;
+            target.speedCost=1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
+            target.speed *= Math.pow(0.95,button.power);
+            updateButtonStats(target);
+        
+            default:
         button.disabled = false;
         button.element.classList.remove("disabled");
         button.timeupdate = false;
+            break;
+        } 
     }
 }
 
@@ -93,9 +92,14 @@ function randomButton(power) {
             case 0:
                 ret = {
                     type: "shards",
+                    shardUse:false,
+                    baseSpeed: 2000,
                     speed: 2000,
-                    speedCost: 10,
-                    powerCost: 25,
+                    baseSpeedCost: 10,
+            speedCost: 10,
+            basePowerCost: 25,
+            powerCost: 25,
+                    basePower: power,
                     power: power
                 };
                 show("shardsarea");
@@ -103,9 +107,14 @@ function randomButton(power) {
             case 1:
                 ret = {
                     type: "speed",
+                    shardUse:false,
+                    baseSpeed: 3500,
                     speed: 3500,
+                    baseSpeedCost: 20,
                     speedCost: 20,
+                    basePowerCost: 35,
                     powerCost: 35,
+                    basePower: power,
                     power: power,
                     target: -1
                 };
@@ -116,15 +125,25 @@ function randomButton(power) {
     } else {
         var options = [{
             type: "shards",
+            shardUse:false,
+            baseSpeed: 2000 / power,
             speed: 2000 / power,
+            baseSpeedCost: 10,
             speedCost: 10,
+            basePowerCost: 25,
             powerCost: 25,
+            basePower: power*(1+(Math.random()*0.50-0.25)),
             power: power*(1+(Math.random()*0.50-0.25)),
         },{
             type: "speed",
+            shardUse:false,
+            baseSpeed: 3500 / power,
             speed: 3500 / power,
-            speedCost: 20,
-            powerCost: 35,
+            baseSpeedCost: 20,
+                    speedCost: 20,
+                    basePowerCost: 35,
+                    powerCost: 35,
+            basePower: power*(1+(Math.random()*0.50-0.25)),
             power: power*(1+(Math.random()*0.50-0.25)),
             target: -1
         }]
@@ -173,6 +192,7 @@ function renderButton(button) {
 }
 
 function SelectTarget(id) {
+    if(player.buttons[id].disabled) return;
     switch (player.buttons[id].type) {
         case "speed":
             player.mode.name = "target";
@@ -216,6 +236,7 @@ function init() {
     window.player = {
         buttons: [{
                 type: "create",
+             shardUse:false,
                 speed: 5000,
             speedCost: 25,
                 power: 1.0,
@@ -238,11 +259,25 @@ function init() {
     loops.game = setInterval(function() {
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
-            if (!button.timeupdate) {
-                continue;
-            }
-            button.time += 0.1;
+            if (!button.timeupdate) continue;
+            if(button.shardUse!=false){   
+                if(player.shards>=button.shardPerSec/10*speedup)
+                {
+            player.shards-=button.shardPerSec/10*speedup;
+            button.shardUse-=button.shardPerSec/10*speedup;
+            update("shardsbox",player.shards.toFixed(1));
+                if(button.shardUse<=0)
+                {
+                setClicked(button, false);
+                }
+            button.time += 0.1*speedup;
             button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
+              }
+            }else
+            {
+            button.time += 0.1*speedup;
+            button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
+            }
         }
     }, 100);
     //autosave
