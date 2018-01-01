@@ -132,7 +132,7 @@ function renderButton(button) {
     switch (button.type) {
         case "shards":
             desc = "Create button shards";
-            line5="-";
+            line5='-';
             break;
         case "speed":
             desc = "Upgrade button speed";
