@@ -106,7 +106,7 @@ function randomButton(power) {
             power: power*(1+(Math.random()*0.50-0.25)),
         },{
             type: "speed",
-            speed: 1000 / power,
+            speed: 3000 / power,
             power: power*(1+(Math.random()*0.50-0.25)),
             target: -1
         }]
