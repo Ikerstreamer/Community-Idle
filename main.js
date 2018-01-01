@@ -37,7 +37,7 @@ function ButtonClick(id) {
                         try {
                             setClicked(button, false);
                             player.shards += button.power;
-                            update("shardsbox", player.shards);
+                            update("shardsbox", player.shards.toFixed(1));
                         } catch (error) {
                             console.error(error);
                         }
