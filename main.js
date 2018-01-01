@@ -127,19 +127,22 @@ function renderButton(button) {
     var elem = document.createElement("div");
     elem.classList = ["button"];
     var desc;
+    var line5;
     var ability = false;
     switch (button.type) {
         case "shards":
             desc = "Create button shards";
+            line5="";
             break;
         case "speed":
             desc = "Upgrade button speed";
+            line5 = '<button class="target">Select target</button>';
             ability = function() {
                 SelectTarget(button.id);
             };
             break;
     }
-    elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) + '</span>x<br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) + '</span>s<br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br><button class="target">Select target</button>';
+    elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) + '</span>x<br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) + '</span>s<br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
     if (ability) elem.getElementsByClassName("target")[0].onclick = ability;
         elem.onclick = function() {ButtonClick(button.id);};
     var td = document.createElement("td");
