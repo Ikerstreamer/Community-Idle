@@ -257,13 +257,16 @@ function get_save(name) {
 
 function init() {
     window.player = {
-        buttons: [{
+        buttons: [
+            {
                 type: "create",
                 shardUse:false,
                 speed: 5000,
+                baseSpeed: 5000,
                 speedCost: 25,
                 baseSpeedCost: 25,
                 power: 1.0,
+                basePower: 0.5,
                 powerCost: 50,
                 basePowerCost: 50,
                 disabled: false,
