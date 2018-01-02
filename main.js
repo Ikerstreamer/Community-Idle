@@ -1,4 +1,4 @@
-var speedup = 5; //set to 1 for normal speed. Change for testing
+var speedup = 1; //set to 1 for normal speed. Change for testing
 function ButtonClick(id) {
     var button = player.buttons[id];
     switch (player.mode.name) {
