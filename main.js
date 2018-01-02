@@ -14,6 +14,12 @@ function ButtonClick(id) {
             player.buttons[player.mode.id].disabled
             break;
         case "delete":
+            if(button.type == "create")
+            {
+            var count = 0;
+            for(i=0;i<player.buttons.length;i++) if(player.buttons[i].type == "create") count++;
+                if(count<=1) return;
+            }
             player.shards+=5*button.power*button.speed/button.baseSpeed
             button.element.parentNode.parentNode.removeChild(button.element.parentNode) //cut off at td level
             button=null
@@ -29,6 +35,7 @@ function ButtonClick(id) {
                             setClicked(button, false);
                             var newbutton = randomButton(button.power);
                             newbutton.id = player.buttons.length;
+                                updateButtonStats(button);
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
                             button.speed*=1.2;
@@ -211,7 +218,7 @@ function renderButton(button) {
     switch (button.type) {
         case "shards":
             desc = "Create button shards";
-            line5='-';
+            line5 = 'ID: <span class="id"></span>'
             break;
         case "speed":
             desc = "Upgrade button speed";
@@ -222,13 +229,13 @@ function renderButton(button) {
             break;
         case "power":
             desc = "Upgrade button power";
-            line5 = '<span class="costmult">1.0</span>x cost<button class="target">Select target</button>';
+            line5 = '<span class="costmult">1.0</span>x cost <button class="target">Select target</button>';
             ability = function() {
                 SelectTarget(button.id);
             };
             break;
     }
-    elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) +'x ('+ button.powerCost.toFixed(1) +')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) +'s ('+ button.speedCost.toFixed(1) +')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
+    elem.innerHTML ='<b>' + desc + '</b><br>Power: <span class="power">' + button.power.toFixed(2) +'x ('+ button.powerCost.toFixed(1) +')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) +'s ('+ button.speedCost.toFixed(1) +')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
     if (ability) elem.getElementsByClassName("target")[0].onclick = ability;
         elem.onclick = function() {ButtonClick(button.id);};
     var td = document.createElement("td");
@@ -238,7 +245,13 @@ function renderButton(button) {
 }
 
 function SelectTarget(id) {
+    if(player.mode.name=="target" && player.mode.id == id) {
+        player.mode.name="click";
+        player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = "Select target";
+        return;
+    }
     if(player.buttons[id].disabled) return;
+    player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = '<b>Choose target</b>';
     player.mode.name = "target";
     player.mode.id = id;
     player.buttons[id].disabled = true;
@@ -254,6 +267,7 @@ function update(set, to) {
 
 function updateButtonStats(button)
 {
+    button.element.getElementsByClassName("id")[0].innerHTML=button.id;
     button.element.getElementsByClassName("time")[0].innerHTML=(button.speed / 1000).toFixed(1)+'s ('+button.speedCost.toFixed(1)+')';
     button.element.getElementsByClassName("time")[1].innerHTML=(button.speed / 1000).toFixed(1);
     button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2)+'x ('+button.powerCost.toFixed(1)+')';
@@ -309,7 +323,7 @@ function init() {
     loops.game = setInterval(function() {
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
-            if (!button||!button.timeupdate) continue;
+            if (!button.timeupdate) continue;
             if(button.shardUse!=false){   
                 if(player.shards>=button.shardPerSec*ft*speedup)
                 {
@@ -318,8 +332,7 @@ function init() {
                     //update("shardsbox",player.shards.toFixed(1));
                     if(button.shardUse<=0)
                     {
-                        player.shards-=button.shardUse
-                        setClicked(button, false);
+                      setClicked(button, false);
                     }
                     button.time += ft*speedup;
                     button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
@@ -331,8 +344,7 @@ function init() {
                 //update("shardsbox",player.shards.toFixed(1));
                 if(button.shardGain<=0)
                 {
-                    player.shards-=button.shardUse
-                    setClicked(button, false);
+                  setClicked(button, false);
                 }
                 button.time += ft*speedup;
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
@@ -352,11 +364,16 @@ function init() {
     //load game
 
     var save_data = get_save('autosave');
-    var save_data = false; //loading doesn't work so it's skipped for now and the foreseeable future (which is actually quite short)
+    //var save_data = false; //loading doesn't work so it's skipped for now and the foreseeable future (which is actually quite short)
     if (save_data) {
         player = save_data;
+        if(player.buttonsmade>=1)show("shardsarea");
+        update("shardsbox",player.shards.toFixed(1));
+        player.buttons[0].element = document.getElementById("firstbutton");
+        updateButtonStats(player.buttons[0]);
+        for(var i=1;i<player.buttons.length;i++){
+            player.buttons[i].element = renderButton(player.buttons[i]);
+                updateButtonStats(player.buttons[i]);
+        }
     }
 }
-
-
-//a comment that was once used to test a github webhook but is now a place where you can put whatever you want
