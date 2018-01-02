@@ -88,7 +88,7 @@ function setClicked(button, disable) {
                 var target=player.buttons[button.target];
                 button.shardUse = false;
                 target.power *= Math.pow(1.1,button.power);
-                target.powerCost = 1.25*(target.basePower*target.power)*target.basePowerCost;
+                target.powerCost = 1.25*(target.power/target.basePower)*target.basePowerCost;
                 updateButtonStats(target);
                 break;
         } 
