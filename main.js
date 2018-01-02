@@ -259,11 +259,13 @@ function init() {
     window.player = {
         buttons: [{
                 type: "create",
-             shardUse:false,
+                shardUse:false,
                 speed: 5000,
-            speedCost: 25,
+                speedCost: 25,
+                baseSpeedCost: 25,
                 power: 1.0,
-            powerCost: 50,
+                powerCost: 50,
+                basePowerCost: 50,
                 disabled: false,
                 id: 0,
                 element: document.getElementById("firstbutton")
