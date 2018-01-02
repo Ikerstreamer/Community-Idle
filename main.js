@@ -13,6 +13,12 @@ function ButtonClick(id) {
             player.mode.name = "click";
             player.buttons[player.mode.id].disabled
             break;
+        case "delete":
+            player.shards+=5*button.power*button.speed/button.baseSpeed
+            button.element.parentNode.parentNode.removeChild(button.element.parentNode) //cut off at td level
+            button=null
+            player.mode.name="click"
+            break;
         case "click":
             if (button.disabled) return;
             player.clicks++;
@@ -37,29 +43,31 @@ function ButtonClick(id) {
                     setTimeout(function() {
                         try {
                             setClicked(button, false);
-                            player.shards += button.power;
-                            update("shardsbox", player.shards.toFixed(1));
+                            //player.shards += button.power;
+                            //update("shardsbox", player.shards.toFixed(1));
                         } catch (error) {
                             console.error(error);
                         }
                     }, button.speed / speedup);
+                    button.shardPerSec=(button.power/button.speed)*1000;
+                    button.shardGain=button.power;
                     setClicked(button,true);
                     break;
                 case "speed":
-                    if(button.target>-1) {
-                        var target = player.buttons[button.target];
-                        button.shardPerSec=(target.speedCost/button.speed)*1000;
-                        button.shardUse+=target.speedCost;
+                    var target = player.buttons[button.target];
+                    if(button.target>-1&&target!=null) {
+                        button.shardPerSec=(target.speedCost*button.speed)*button.costmult*1000;
+                        button.shardUse+=target.speedCost*button.costmult;
                         setClicked(button,true);
-                        }
+                    }
                     break;
                 case "power":
-                    if(button.target>-1) {
-                        var target = player.buttons[button.target];
-                        button.shardPerSec=(target.powerCost/button.speed)*1000;
-                        button.shardUse+=target.powerCost;
+                    var target = player.buttons[button.target];
+                    if(button.target>-1&&target!=null) {
+                        button.shardPerSec=(target.powerCost/button.speed)*button.costmult*1000;
+                        button.shardUse+=target.powerCost*button.costmult;
                         setClicked(button,true);
-                        }
+                    }
                     break;
                 default:
                     console.error("unrecognized type: " + button.type);
@@ -80,13 +88,17 @@ function setClicked(button, disable) {
             case "speed":
                 var target=player.buttons[button.target];
                 button.shardUse = false;
+                button.costmult+=0.1
+                button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
                 target.speed *= Math.pow(0.95,button.power);
-                target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
+                target.speedCost = 1.1*(target.baseSpeed*target.speed)*target.baseSpeedCost;
                 updateButtonStats(target);
                 break;
             case "power":
                 var target=player.buttons[button.target];
                 button.shardUse = false;
+                button.costmult+=0.1
+                button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
                 target.power *= Math.pow(1.1,button.power);
                 target.powerCost = 1.25*(target.power/target.basePower)*target.basePowerCost;
                 updateButtonStats(target);
@@ -120,7 +132,8 @@ function randomButton(power) {
                     speedCost: 20,
                     powerCost: 35,
                     power: power,
-                    target: -1
+                    target: -1,
+                    costmult: 1.0
                 };
                 break;
             case 2:
@@ -139,7 +152,8 @@ function randomButton(power) {
                     speedCost: 35,
                     powerCost: 50,
                     power: power,
-                    target: -1
+                    target: -1,
+                    costmult: 1.0
                 }; 
                 break;
             default:
@@ -158,16 +172,18 @@ function randomButton(power) {
             speedCost: 20,
             powerCost: 35,
             power: power*(1+(Math.random()*0.35)),
-            target: -1
+            target: -1,
+            costmult: 1.0
         },{
             type: "power",
             speed: 8000 / power,
             speedCost: 35,
             powerCost: 50,
             power: power*(1+(Math.random()*0.35)),
-            target: -1
-           }]
-        var ratio = [15,4,3];
+            target: -1,
+            costmult: 1.0
+        }]
+        var ratio = [14,4,3];
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
@@ -181,6 +197,7 @@ function randomButton(power) {
     ret.baseSpeedCost=ret.speedCost;
     ret.basePowerCost=ret.powerCost;
     ret.shardUse=false;
+    ret.shardGain=false;
     ret.element = renderButton(ret); //at some point: skip rendering buttons that won't be seen
     return ret;
 }
@@ -198,17 +215,18 @@ function renderButton(button) {
             break;
         case "speed":
             desc = "Upgrade button speed";
-            line5 = 'Cost multiplier: 1.0x <button class="target">Select target</button>';
+            line5 = '<span class="costmult">1.0</span>x cost <button class="target">Select target</button>';
             ability = function() {
                 SelectTarget(button.id);
             };
             break;
         case "power":
             desc = "Upgrade button power";
-            line5 = '<button class="target">Select target</button>';
+            line5 = '<span class="costmult">1.0</span>x cost<button class="target">Select target</button>';
             ability = function() {
                 SelectTarget(button.id);
             };
+            break;
     }
     elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) +'x ('+ button.powerCost.toFixed(1) +')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) +'s ('+ button.speedCost.toFixed(1) +')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
     if (ability) elem.getElementsByClassName("target")[0].onclick = ability;
@@ -221,9 +239,9 @@ function renderButton(button) {
 
 function SelectTarget(id) {
     if(player.buttons[id].disabled) return;
-            player.mode.name = "target";
-            player.mode.id = id;
-            player.buttons[id].disabled = true;
+    player.mode.name = "target";
+    player.mode.id = id;
+    player.buttons[id].disabled = true;
 }
 
 function show(thing) {
@@ -238,43 +256,45 @@ function updateButtonStats(button)
 {
     button.element.getElementsByClassName("time")[0].innerHTML=(button.speed / 1000).toFixed(1)+'s ('+button.speedCost.toFixed(1)+')';
     button.element.getElementsByClassName("time")[1].innerHTML=(button.speed / 1000).toFixed(1);
-    button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2)+'x ('+button.powerCost.toFixed(1)+')';    
+    button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2)+'x ('+button.powerCost.toFixed(1)+')';
+    if(button.costmult){
+        button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
+    }  
 }
 
 function set_save(name, value) {
     localStorage.setItem(name, btoa(JSON.stringify(value, function(k, v) {
-                    return (v === Infinity) ? "Infinity" : v;
-                })));
+        return (v === Infinity) ? "Infinity" : v;
+    })));
 }
 
 function get_save(name) {
     if (localStorage.getItem(name) !== null) {
         return JSON.parse(atob(localStorage.getItem(name), function(k, v) {
-                    return (v === Infinity) ? "Infinity" : v;
-                }));
+            return (v === Infinity) ? "Infinity" : v;
+        }));
     }
 }
 
 
 function init() {
     window.player = {
-        buttons: [
-            {
-                type: "create",
-                shardUse:false,
-                speed: 5000,
-                baseSpeed: 5000,
-                speedCost: 25,
-                baseSpeedCost: 25,
-                power: 1.0,
-                basePower: 1.0,
-                powerCost: 50,
-                basePowerCost: 50,
-                disabled: false,
-                id: 0,
-                element: document.getElementById("firstbutton")
-            }
-        ],
+        buttons: [{
+            type: "create",
+            shardUse:false,
+            shardGain:false,
+            speed: 5000,
+            baseSpeed: 5000,
+            speedCost: 25,
+            baseSpeedCost: 25,
+            power: 1.0,
+            basePower: 1.0,
+            powerCost: 50,
+            basePowerCost: 50,
+            disabled: false,
+            id: 0,
+            element: document.getElementById("firstbutton")
+        }],
         mode: {
             name: "click",
             id: 0
@@ -284,31 +304,44 @@ function init() {
         shards: 0
     };
     window.loops = {}; //put setinterval ids here
+    window.ft=0.02 //frametime
     //game loop
     loops.game = setInterval(function() {
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
             if (!button.timeupdate) continue;
             if(button.shardUse!=false){   
-                if(player.shards>=button.shardPerSec/10*speedup)
+                if(player.shards>=button.shardPerSec*ft*speedup)
                 {
-            player.shards-=button.shardPerSec/10*speedup;
-            button.shardUse-=button.shardPerSec/10*speedup;
-            update("shardsbox",player.shards.toFixed(1));
-                if(button.shardUse<=0)
-                {
-                setClicked(button, false);
+                    player.shards-=button.shardPerSec*ft*speedup;
+                    button.shardUse-=button.shardPerSec*ft*speedup;
+                    //update("shardsbox",player.shards.toFixed(1));
+                    if(button.shardUse<=0)
+                    {
+                      setClicked(button, false);
+                    }
+                    button.time += ft*speedup;
+                    button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
                 }
-            button.time += 0.1*speedup;
-            button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
-              }
+            }else if(button.shardGain!=false)
+            { 
+                player.shards+=button.shardPerSec*ft*speedup;
+                button.shardGain-=button.shardPerSec*ft*speedup;
+                //update("shardsbox",player.shards.toFixed(1));
+                if(button.shardGain<=0)
+                {
+                  setClicked(button, false);
+                }
+                button.time += ft*speedup;
+                button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             }else
             {
-            button.time += 0.1*speedup;
-            button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
+                button.time += ft*speedup;
+                button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             }
         }
-    }, 100);
+        update("shardsbox",player.shards.toFixed(1));
+    }, 20);
     //autosave
     loops.autosave = setInterval(function() {
         set_save("autosave", player);
@@ -317,7 +350,7 @@ function init() {
     //load game
 
     var save_data = get_save('autosave');
-    var save_data = false; //loading doesn't work so it's skipped for now
+    var save_data = false; //loading doesn't work so it's skipped for now and the foreseeable future (which is actually quite short)
     if (save_data) {
         player = save_data;
     }
