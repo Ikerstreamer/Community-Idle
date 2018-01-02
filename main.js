@@ -56,7 +56,7 @@ function ButtonClick(id) {
                 case "speed":
                     var target = player.buttons[button.target];
                     if(button.target>-1&&target!=null) {
-                        button.shardPerSec=(target.speedCost*button.speed)*button.costmult*1000;
+                        button.shardPerSec=(target.speedCost/button.speed)*button.costmult*1000;
                         button.shardUse+=target.speedCost*button.costmult;
                         setClicked(button,true);
                     }
@@ -91,7 +91,7 @@ function setClicked(button, disable) {
                 button.costmult+=0.1
                 button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
                 target.speed *= Math.pow(0.95,button.power);
-                target.speedCost = 1.1*(target.baseSpeed*target.speed)*target.baseSpeedCost;
+                target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
                 updateButtonStats(target);
                 break;
             case "power":
@@ -309,7 +309,7 @@ function init() {
     loops.game = setInterval(function() {
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
-            if (!button.timeupdate) continue;
+            if (!button||!button.timeupdate) continue;
             if(button.shardUse!=false){   
                 if(player.shards>=button.shardPerSec*ft*speedup)
                 {
@@ -318,7 +318,8 @@ function init() {
                     //update("shardsbox",player.shards.toFixed(1));
                     if(button.shardUse<=0)
                     {
-                      setClicked(button, false);
+                        player.shards-=button.shardUse
+                        setClicked(button, false);
                     }
                     button.time += ft*speedup;
                     button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
@@ -330,7 +331,8 @@ function init() {
                 //update("shardsbox",player.shards.toFixed(1));
                 if(button.shardGain<=0)
                 {
-                  setClicked(button, false);
+                    player.shards-=button.shardUse
+                    setClicked(button, false);
                 }
                 button.time += ft*speedup;
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
