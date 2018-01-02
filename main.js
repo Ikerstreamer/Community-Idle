@@ -1,4 +1,4 @@
-var speedup = 1; //set to 1 for normal speed. Change for testing
+var speedup = 5; //set to 1 for normal speed. Change for testing
 function ButtonClick(id) {
     var button = player.buttons[id];
     switch (player.mode.name) {
@@ -25,7 +25,7 @@ function ButtonClick(id) {
                             newbutton.id = player.buttons.length;
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
-                            button.speed*=Math.pow(1.25,player.buttonsmade);
+                            button.speed*=1.2;
                             updateButtonStats(button);  
                         } catch (error) {
                             console.error(error);
@@ -48,9 +48,17 @@ function ButtonClick(id) {
                 case "speed":
                     if(button.target>-1) {
                         var target = player.buttons[button.target];
-                    button.shardPerSec=(target.speedCost/button.speed)*1000;
-                    button.shardUse+=target.speedCost;
-                    setClicked(button,true);
+                        button.shardPerSec=(target.speedCost/button.speed)*1000;
+                        button.shardUse+=target.speedCost;
+                        setClicked(button,true);
+                        }
+                    break;
+                case "power":
+                    if(button.target>-1) {
+                        var target = player.buttons[button.target];
+                        button.shardPerSec=(target.speedCost/button.speed)*1000;
+                        button.shardUse+=target.speedCost;
+                        setClicked(button,true);
                         }
                     break;
                 default:
@@ -72,34 +80,34 @@ function setClicked(button, disable) {
             case "speed":
             var target=player.buttons[button.target];
             button.shardUse = false;
-            target.speedCost=1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
+            target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
             target.speed *= Math.pow(0.95,button.power);
             updateButtonStats(target);
-        
-            default:
+                break;
+            case "power":
+                var target=player.buttons[button.target];
+                button.shardUse = false;
+                target.powerCost = 1.25*(target.basePower/target.power)*target.basePowerCost;
+                target.power *= Math.pow(1.1,button.power);
+                updateButtonStats(target);
+                break;
+        } 
         button.disabled = false;
         button.element.classList.remove("disabled");
         button.timeupdate = false;
-            break;
-        } 
     }
 }
 
 function randomButton(power) {
     var ret;
-    if (player.buttonsmade < 2) { //first 3 buttons made are fixed
+    if (player.buttonsmade < 4) { //first 3 buttons made are fixed
         switch (player.buttonsmade) {
             case 0:
                 ret = {
                     type: "shards",
-                    shardUse:false,
-                    baseSpeed: 2000,
                     speed: 2000,
-                    baseSpeedCost: 10,
-            speedCost: 10,
-            basePowerCost: 25,
-            powerCost: 25,
-                    basePower: power,
+                    speedCost: 10,
+                    powerCost: 25,
                     power: power
                 };
                 show("shardsarea");
@@ -107,17 +115,31 @@ function randomButton(power) {
             case 1:
                 ret = {
                     type: "speed",
-                    shardUse:false,
-                    baseSpeed: 3500,
-                    speed: 3500,
-                    baseSpeedCost: 20,
+                    speed: 4000,
                     speedCost: 20,
-                    basePowerCost: 35,
                     powerCost: 35,
-                    basePower: power,
                     power: power,
                     target: -1
                 };
+                break;
+            case 2:
+                ret = {
+                    type: "shards",
+                    speed: 2000,
+                    speedCost: 10,
+                    powerCost: 25,
+                    power: power*1.2
+                };
+                break;
+            case 3:
+                ret = {
+                    type: "power",
+                    speed: 8000,
+                    speedCost: 35,
+                    powerCost: 50,
+                    power: power,
+                    target: -1
+                }; 
                 break;
             default:
                 console.log("Um.");
@@ -125,29 +147,26 @@ function randomButton(power) {
     } else {
         var options = [{
             type: "shards",
-            shardUse:false,
-            baseSpeed: 2000 / power,
             speed: 2000 / power,
-            baseSpeedCost: 10,
             speedCost: 10,
-            basePowerCost: 25,
             powerCost: 25,
-            basePower: power*(1+(Math.random()*0.50-0.25)),
-            power: power*(1+(Math.random()*0.50-0.25)),
+            power: power*(1+(Math.random()*0.35)),
         },{
             type: "speed",
-            shardUse:false,
-            baseSpeed: 3500 / power,
             speed: 3500 / power,
-            baseSpeedCost: 20,
-                    speedCost: 20,
-                    basePowerCost: 35,
-                    powerCost: 35,
-            basePower: power*(1+(Math.random()*0.50-0.25)),
-            power: power*(1+(Math.random()*0.50-0.25)),
+            speedCost: 20,
+            powerCost: 35,
+            power: power*(1+(Math.random()*0.35)),
             target: -1
-        }]
-        var ratio = [7,1];
+        },{
+            type: "power",
+            speed: 8000 / power,
+            speedCost: 35,
+            powerCost: 50,
+            power: power*(1+(Math.random()*0.35)),
+            target: -1
+           }]
+        var ratio = [20,4,3];
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
@@ -156,6 +175,11 @@ function randomButton(power) {
         //todo: add more button types
         show("shardsarea");
     }
+    ret.baseSpeed=ret.speed;
+    ret.basePower=ret.power;
+    ret.baseSpeedCost=ret.speedCost;
+    ret.basePowerCost=ret.powerCost;
+    ret.shardUse=false;
     ret.element = renderButton(ret); //at some point: skip rendering buttons that won't be seen
     return ret;
 }
@@ -166,12 +190,10 @@ function renderButton(button) {
     var desc;
     var line5;
     var ability = false;
-    var row;
     switch (button.type) {
         case "shards":
             desc = "Create button shards";
             line5='-';
-            row = "rowshard";
             break;
         case "speed":
             desc = "Upgrade button speed";
@@ -179,27 +201,28 @@ function renderButton(button) {
             ability = function() {
                 SelectTarget(button.id);
             };
-            row = "rowspeed";
             break;
+        case "power":
+            desc = "Upgrade button power";
+            line5 = '<button class="target">Select target</button>';
+            ability = function() {
+                SelectTarget(button.id);
+            };
     }
     elem.innerHTML = desc + '<br>Power: <span class="power">' + button.power.toFixed(2) +'x ('+ button.powerCost.toFixed(1) +')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) +'s ('+ button.speedCost.toFixed(1) +')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
     if (ability) elem.getElementsByClassName("target")[0].onclick = ability;
         elem.onclick = function() {ButtonClick(button.id);};
     var td = document.createElement("td");
     td.appendChild(elem);
-    document.getElementById(row).appendChild(td);
+    document.getElementById("row"+button.type).appendChild(td);
     return elem;
 }
 
 function SelectTarget(id) {
     if(player.buttons[id].disabled) return;
-    switch (player.buttons[id].type) {
-        case "speed":
             player.mode.name = "target";
             player.mode.id = id;
             player.buttons[id].disabled = true;
-      break;
-    }
 }
 
 function show(thing) {
