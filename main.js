@@ -56,7 +56,7 @@ function ButtonClick(id) {
                 case "power":
                     if(button.target>-1) {
                         var target = player.buttons[button.target];
-                        button.shardPerSec=(target.speedCost/button.speed)*1000;
+                        button.shardPerSec=(target.powerCost/button.speed)*1000;
                         button.shardUse+=target.speedCost;
                         setClicked(button,true);
                         }
@@ -78,11 +78,11 @@ function setClicked(button, disable) {
     } else {
         switch(button.type) {
             case "speed":
-            var target=player.buttons[button.target];
-            button.shardUse = false;
-            target.speed *= Math.pow(0.95,button.power);
-            target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
-            updateButtonStats(target);
+                var target=player.buttons[button.target];
+                button.shardUse = false;
+                target.speed *= Math.pow(0.95,button.power);
+                target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
+                updateButtonStats(target);
                 break;
             case "power":
                 var target=player.buttons[button.target];
