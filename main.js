@@ -197,7 +197,7 @@ function renderButton(button) {
             break;
         case "speed":
             desc = "Upgrade button speed";
-            line5 = '<button class="target">Select target</button>';
+            line5 = 'Cost multiplier: 1.0x <button class="target">Select target</button>';
             ability = function() {
                 SelectTarget(button.id);
             };
@@ -266,7 +266,7 @@ function init() {
                 speedCost: 25,
                 baseSpeedCost: 25,
                 power: 1.0,
-                basePower: 0.5,
+                basePower: 1.0,
                 powerCost: 50,
                 basePowerCost: 50,
                 disabled: false,
