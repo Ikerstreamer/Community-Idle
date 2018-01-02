@@ -167,7 +167,7 @@ function randomButton(power) {
             power: power*(1+(Math.random()*0.35)),
             target: -1
            }]
-        var ratio = [20,4,3];
+        var ratio = [15,4,3];
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
