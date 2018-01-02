@@ -80,15 +80,15 @@ function setClicked(button, disable) {
             case "speed":
             var target=player.buttons[button.target];
             button.shardUse = false;
-            target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
             target.speed *= Math.pow(0.95,button.power);
+            target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
             updateButtonStats(target);
                 break;
             case "power":
                 var target=player.buttons[button.target];
                 button.shardUse = false;
-                target.powerCost = 1.25*(target.basePower/target.power)*target.basePowerCost;
                 target.power *= Math.pow(1.1,button.power);
+                target.powerCost = 1.25*(target.basePower*target.power)*target.basePowerCost;
                 updateButtonStats(target);
                 break;
         } 
@@ -97,6 +97,7 @@ function setClicked(button, disable) {
         button.timeupdate = false;
     }
 }
+
 
 function randomButton(power) {
     var ret;
