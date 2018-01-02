@@ -171,7 +171,7 @@ function randomButton(power) {
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
-        for (check=0;rand>ratio[check];check++) rand -= ratio[i];
+        for (check=0;rand>ratio[check];check++) rand -= ratio[check];
         ret = options[check];
         //todo: add more button types
         show("shardsarea");
