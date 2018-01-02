@@ -57,7 +57,7 @@ function ButtonClick(id) {
                     if(button.target>-1) {
                         var target = player.buttons[button.target];
                         button.shardPerSec=(target.powerCost/button.speed)*1000;
-                        button.shardUse+=target.speedCost;
+                        button.shardUse+=target.powerCost;
                         setClicked(button,true);
                         }
                     break;
