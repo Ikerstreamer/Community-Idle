@@ -364,7 +364,7 @@ function init() {
     //load game
 
     var save_data = get_save('autosave');
-    //var save_data = false; //loading doesn't work so it's skipped for now and the foreseeable future (which is actually quite short)
+
     if (save_data) {
         player = save_data;
         if(player.buttonsmade>=1)show("shardsarea");
@@ -376,4 +376,36 @@ function init() {
                 updateButtonStats(player.buttons[i]);
         }
     }
+}
+
+function reset() {
+        for(var i=1;i<player.buttons.length;i++) player.buttons[i].element.parentNode.parentNode.removeChild(player.buttons[i].element.parentNode); 
+       player = {
+        buttons: [{
+            type: "create",
+            shardUse:false,
+            shardGain:false,
+            speed: 5000,
+            baseSpeed: 5000,
+            speedCost: 25,
+            baseSpeedCost: 25,
+            power: 1.0,
+            basePower: 1.0,
+            powerCost: 50,
+            basePowerCost: 50,
+            disabled: false,
+            id: 0,
+            element: document.getElementById("firstbutton")
+        }],
+        mode: {
+            name: "click",
+            id: 0
+        },
+        clicks: 0,
+        buttonsmade: 0,
+        shards: 0
+    };
+        document.getElementById("shardsarea").classList.add("hidden");
+        update("shardsbox",player.shards.toFixed(1));
+        updateButtonStats(player.buttons[0]);
 }
