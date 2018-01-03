@@ -394,7 +394,8 @@ function reset() {
             powerCost: 50,
             basePowerCost: 50,
             disabled: false,
-            timeUpdate: 0,
+            timeUpdate: false,
+            time: 0,
             id: 0,
             element: document.getElementById("firstbutton")
         }],
