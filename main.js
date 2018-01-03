@@ -35,11 +35,11 @@ function ButtonClick(id) {
                             setClicked(button, false);
                             var newbutton = randomButton(button.power);
                             newbutton.id = player.buttons.length;
-                                updateButtonStats(button);
+                                updateButtonStats(newbutton);
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
                             button.speed*=1.2;
-                            updateButtonStats(newbutton);  
+                            updateButtonStats(button);  
                         } catch (error) {
                             console.error(error);
                         }
