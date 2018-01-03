@@ -267,7 +267,7 @@ function update(set, to) {
 
 function updateButtonStats(button)
 {
-    button.element.getElementsByClassName("id")[0].innerHTML=button.id;
+    if(button.type=="shard" || button.type=="create" )button.element.getElementsByClassName("id")[0].innerHTML=button.id;
     button.element.getElementsByClassName("time")[0].innerHTML=(button.speed / 1000).toFixed(1)+'s ('+button.speedCost.toFixed(1)+')';
     button.element.getElementsByClassName("time")[1].innerHTML=(button.speed / 1000).toFixed(1);
     button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2)+'x ('+button.powerCost.toFixed(1)+')';
@@ -394,6 +394,7 @@ function reset() {
             powerCost: 50,
             basePowerCost: 50,
             disabled: false,
+            timeUpdate: 0,
             id: 0,
             element: document.getElementById("firstbutton")
         }],
