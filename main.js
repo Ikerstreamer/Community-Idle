@@ -20,6 +20,7 @@ function ButtonClick(id) {
             for(i=0;i<player.buttons.length;i++) if(player.buttons[i].type == "create") count++;
                 if(count<=1) return;
             }
+            for(i=0;i<player.buttons.length;i++)if(player.buttons[i].target==id)player.buttons[i].target=-1;
             player.shards+=5*button.power*button.speed/button.baseSpeed
             button.element.parentNode.parentNode.removeChild(button.element.parentNode) //cut off at td level
             player.buttons.splice(id,1);
