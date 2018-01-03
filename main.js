@@ -22,7 +22,7 @@ function ButtonClick(id) {
             }
             player.shards+=5*button.power*button.speed/button.baseSpeed
             button.element.parentNode.parentNode.removeChild(button.element.parentNode) //cut off at td level
-            button=null
+            player.buttons.splice(id,1);
             player.mode.name="click"
             break;
         case "click":
