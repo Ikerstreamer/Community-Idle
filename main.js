@@ -23,7 +23,7 @@ function ButtonClick(id) {
             for(i=0;i<player.buttons.length;i++)if(player.buttons[i].target==id)player.buttons[i].target=-1;
             player.shards+=5*button.power*button.speed/button.baseSpeed
             button.element.parentNode.parentNode.removeChild(button.element.parentNode) //cut off at td level
-            player.buttons.splice(id,1);
+            button=null;
             player.mode.name="click"
             break;
         case "click":
@@ -380,8 +380,7 @@ function init() {
 }
 
 function reset() {
-        for(var i=1;i<player.buttons.length;i++) player.buttons[i].element.parentNode.parentNode.removeChild(player.buttons[i].element.parentNode); 
-       player = {
+    document.getElementById("BtnTable").innerHTML = '<tr id="rowcreate"><td><div onclick="ButtonClick(0)" id="firstbutton" class="button"><b>Create a new button</b><br>Power: <span class="power">1.00x (50.0)</span><br>Time: <span class="time">5.0s (25.0)</span><br><span class="timeleft">0.0</span>/<span class="time">5.0</span><br>ID: <span class="id"></span></div></td></tr><tr id="rowshards"></tr><tr id="rowspeed"></tr><tr id="rowpower"></tr>';       player = {
         buttons: [{
             type: "create",
             shardUse:false,
