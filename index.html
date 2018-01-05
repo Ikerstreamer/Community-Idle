@@ -8,19 +8,28 @@
 </head>
 <body onload="init()">
   <button onclick="set_save('autosave',player)">save game</button>
+  <button onclick="player.mode.name='delete'">make a button disappear and get shards</button>
+  <button onclick="reset()">Reset</button>
   <span id="shardsarea" class="hidden"><br>Button Shards: <b id="shardsbox">0</b></span>
   <span id="fragsarea" class="hidden"><br>Button Fragments: <b id="fragsbox">0</b></span>
   <table>
-    <tr id="row">
+    <tr id="rowcreate">
       <td>
         <div onclick="ButtonClick(0)" id="firstbutton" class="button">
-          Create a new button<br>
-          Power: <span class="power">1.0x</span><br>
-          Time: <span class="time">5.0</span>s<br>
-          <span class="timeleft">0.0</span>/<span class="time">5.0</span>
+            <b>Create a new button</b><br>
+          Power: <span class="power">1.00x (50.0)</span><br>
+          Time: <span class="time">5.0s (25.0)</span><br>
+          <span class="timeleft">0.0</span>/<span class="time">5.0</span><br>
+          ID: <span class="id"></span>
         </div>
       </td>
+      </tr>
+      <tr id="rowshards">
+      </tr>
+      <tr id="rowspeed">
     </tr>
+      <tr id="rowpower">
+      </tr>
   </table>
 </body>
 </html>
