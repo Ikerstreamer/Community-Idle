@@ -4,7 +4,7 @@ function ButtonClick(id) {
     switch (player.mode.name) {
         case "target":
             if (button.disabled && button.id==player.mode.id){
-                button.disabled = false;    
+                button.disabled = false;
                 return;
             }
             var dest = player.buttons[player.mode.id];
@@ -40,7 +40,7 @@ function ButtonClick(id) {
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
                             button.speed*=1.2;
-                            updateButtonStats(button);  
+                            updateButtonStats(button);
                         } catch (error) {
                             console.error(error);
                         }
@@ -325,7 +325,7 @@ function init() {
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
             if (!button.timeupdate) continue;
-            if(button.shardUse!=false){   
+            if(button.shardUse!=false){
                 if(player.shards>=button.shardPerSec*ft*speedup)
                 {
                     player.shards-=button.shardPerSec*ft*speedup;
@@ -380,7 +380,8 @@ function init() {
 }
 
 function reset() {
-    document.getElementById("BtnTable").innerHTML = '<tr id="rowcreate"><td><div onclick="ButtonClick(0)" id="firstbutton" class="button"><b>Create a new button</b><br>Power: <span class="power">1.00x (50.0)</span><br>Time: <span class="time">5.0s (25.0)</span><br><span class="timeleft">0.0</span>/<span class="time">5.0</span><br>ID: <span class="id"></span></div></td></tr><tr id="rowshards"></tr><tr id="rowspeed"></tr><tr id="rowpower"></tr>';       player = {
+    document.getElementById("BtnTable").innerHTML = '<tr id="rowcreate"><td><div onclick="ButtonClick(0)" id="firstbutton" class="button"><b>Create a new button</b><br>Power: <span class="power">1.00x (50.0)</span><br>Time: <span class="time">5.0s (25.0)</span><br><span class="timeleft">0.0</span>/<span class="time">5.0</span><br>ID: <span class="id"></span></div></td></tr><tr id="rowshards"></tr><tr id="rowspeed"></tr><tr id="rowpower"></tr>';
+    player = {
         buttons: [{
             type: "create",
             shardUse:false,
