@@ -40,6 +40,7 @@ function ButtonClick(id) {
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
                             button.speed*=1.2;
+                            button.baseSpeed*=1.2;
                             updateButtonStats(button);
                         } catch (error) {
                             console.error(error);
