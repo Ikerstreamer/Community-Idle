@@ -1,4 +1,4 @@
-var speedup = 1; //set to 1 for normal speed. Change for testing
+var speedup = 20; //set to 1 for normal speed. Change for testing
 function ButtonClick(id) {
     var button = player.buttons[id];
     switch (player.mode.name) {
@@ -76,6 +76,11 @@ function ButtonClick(id) {
                         button.shardUse+=target.powerCost*button.costmult;
                         setClicked(button,true);
                     }
+                    break;
+                case "force":
+                        button.shardPerSec = (button.shardCost / button.speed) * 1000;
+                        button.shardUse += button.shardCost ;
+                        setClicked(button, true);
                     break;
                 default:
                     console.error("unrecognized type: " + button.type);
@@ -170,13 +175,13 @@ function randomButton(power) {
     } else {
         var options = [{
             type: "shards",
-            speed: 2000 / power,
+            speed: 2000 * Math.max(power * 0.5, 1),
             speedCost: 10,
             powerCost: 25,
             power: power*(1+(Math.random()*0.35)),
         },{
             type: "speed",
-            speed: 4000 / power,
+            speed: 4000 * Math.max(power * 0.5, 1),
             speedCost: 20,
             powerCost: 35,
             power: power*(1+(Math.random()*0.35)),
@@ -184,20 +189,26 @@ function randomButton(power) {
             costmult: 1.0
         },{
             type: "power",
-            speed: 8000 / power,
+            speed: 8000 * Math.max(power * 0.5, 1),
             speedCost: 35,
             powerCost: 50,
             power: power*(1+(Math.random()*0.35)),
             target: -1,
             costmult: 1.0
+        },{
+            type: "force",
+            speed: 20000 * Math.max(power * 0.5, 1),
+            speedCost: 100,
+            powerCost: 200,
+            power: power * (1 + (Math.random() * 0.35)),
+            shardCost: 100,
         }]
-        var ratio = [14,4,3];
+        var ratio = [14,4,3,3];
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
         for (check=0;rand>ratio[check];check++) rand -= ratio[check];
         ret = options[check];
-        //todo: add more button types
         show("shardsarea");
     }
     ret.baseSpeed=ret.speed;
@@ -234,6 +245,10 @@ function renderButton(button) {
             ability = function() {
                 SelectTarget(button.id);
             };
+            break;
+        case "force":
+            desc = "Create slot force";
+            line5 = 'ID: <span class="id"></span> Shard cost: <span class=shardcost>'+button.shardCost+'</span>';
             break;
     }
     elem.innerHTML ='<b>' + desc + '</b><br>Power: <span class="power">' + button.power.toFixed(2) +'x ('+ button.powerCost.toFixed(1) +')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) +'s ('+ button.speedCost.toFixed(1) +')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>'+line5;
