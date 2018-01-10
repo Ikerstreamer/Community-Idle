@@ -7,12 +7,13 @@
   <script type="text/javascript" src="main.js"></script>
   <title>Community Idle</title>
 </head>
-<body onload="init()">
+<body onload="init()" background="https://media.giphy.com/media/ZJlesIV8TnabS/giphy.gif">
   <button onclick="set_save('autosave',player)">save game</button>
   <button onclick="player.mode.name='delete'">make a button disappear and get shards</button>
   <button onclick="reset()">Reset</button>
   <span id="shardsarea" class="hidden"><br>Button Shards: <b id="shardsbox">0</b></span>
   <span id="fragsarea" class="hidden"><br>Button Fragments: <b id="fragsbox">0</b></span>
+  <span id="forcearea" class="hidden"><br>Slot Force: <b id="forcebox">0</b></span>
   <table id="BtnTable">
     <tr id="rowcreate">
       <td>
@@ -31,8 +32,8 @@
     </tr>
       <tr id="rowpower">
       </tr>
-      <tr id="rowforce"></tr>
+      <tr id="rowforce">
+      </tr>
   </table>
-  <body background="https://media.giphy.com/media/ZJlesIV8TnabS/giphy.gif">
 </body>
 </html>

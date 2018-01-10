@@ -11,7 +11,8 @@ function ButtonClick(id) {
             dest.target = button.id;
             dest.element.getElementsByClassName("target")[0].innerHTML = "Target: " + button.id;
             player.mode.name = "click";
-            player.buttons[player.mode.id].disabled
+            player.buttons[player.mode.id].disabled;
+            updateModeVisuals();
             break;
         case "delete":
             if(button.type == "create")
@@ -39,7 +40,8 @@ function ButtonClick(id) {
                                 updateButtonStats(newbutton);
                             player.buttons.push(newbutton);
                             player.buttonsmade++;
-                            button.speed*=1.2;
+                            button.speed *= 1.2;
+                            button.baseSpeed *= 1.2;
                             updateButtonStats(button);
                         } catch (error) {
                             console.error(error);
@@ -48,15 +50,6 @@ function ButtonClick(id) {
                     setClicked(button,true);
                     break;
                 case "shards":
-                    setTimeout(function() {
-                        try {
-                            setClicked(button, false);
-                            //player.shards += button.power;
-                            //update("shardsbox", player.shards.toFixed(1));
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    }, button.speed / speedup);
                     button.shardPerSec=(button.power/button.speed)*1000;
                     button.shardGain=button.power;
                     setClicked(button,true);
@@ -65,7 +58,8 @@ function ButtonClick(id) {
                     var target = player.buttons[button.target];
                     if(button.target>-1&&target!=null) {
                         button.shardPerSec=(target.speedCost/button.speed)*button.costmult*1000;
-                        button.shardUse+=target.speedCost*button.costmult;
+                        button.shardUse += target.speedCost * button.costmult;
+                        target.speedCost = 1.1 * (target.baseSpeed / target.speed) * target.baseSpeedCost;
                         setClicked(button,true);
                     }
                     break;
@@ -73,13 +67,14 @@ function ButtonClick(id) {
                     var target = player.buttons[button.target];
                     if(button.target>-1&&target!=null) {
                         button.shardPerSec=(target.powerCost/button.speed)*button.costmult*1000;
-                        button.shardUse+=target.powerCost*button.costmult;
+                        button.shardUse += target.powerCost * button.costmult;
+                        target.powerCost = 1.25 * (target.power / target.basePower) * target.basePowerCost;
                         setClicked(button,true);
                     }
                     break;
                 case "force":
                         button.shardPerSec = (button.shardCost / button.speed) * 1000;
-                        button.shardUse += button.shardCost ;
+                        button.shardUse += button.shardCost * button.costmult;
                         setClicked(button, true);
                     break;
                 default:
@@ -97,32 +92,40 @@ function setClicked(button, disable) {
         button.time = 0;
         button.timeupdate = true;
     } else {
-        switch(button.type) {
-            case "speed":
-                var target=player.buttons[button.target];
-                button.shardUse = false;
-                button.costmult+=0.1
-                button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
-                target.speed *= Math.pow(0.95,button.power);
-                target.speedCost = 1.1*(target.baseSpeed/target.speed)*target.baseSpeedCost;
-                updateButtonStats(target);
-                break;
-            case "power":
-                var target=player.buttons[button.target];
-                button.shardUse = false;
-                button.costmult+=0.1
-                button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
-                target.power *= Math.pow(1.1,button.power);
-                target.powerCost = 1.25*(target.power/target.basePower)*target.basePowerCost;
-                updateButtonStats(target);
-                break;
-        } 
+        buttonReward(button);
         button.disabled = false;
         button.element.classList.remove("disabled");
         button.timeupdate = false;
     }
 }
 
+function buttonReward(button) {
+    switch (button.type) {
+        case "speed":
+            var target = player.buttons[button.target];
+            button.shardUse = false;
+            button.costmult += 0.1
+            button.element.getElementsByClassName("costmult")[0].innerHTML = button.costmult.toFixed(1);
+            target.speed *= Math.pow(0.95, button.power);
+            updateButtonStats(target);
+            break;
+        case "power":
+            var target = player.buttons[button.target];
+            button.shardUse = false;
+            button.costmult += 0.1
+            button.element.getElementsByClassName("costmult")[0].innerHTML = button.costmult.toFixed(1);
+            target.power *= Math.pow(1.1, button.power);
+            updateButtonStats(target);
+            break;
+        case "force":
+            player.force += button.power;
+            button.shardUse = false;
+            button.costmult += 0.1;
+            button.element.getElementsByClassName("shardcost")[0].innerHTML = (button.shardCost * button.costmult).toFixed(1);
+            updateButtonStats(button);
+            break;
+    }
+}
 
 function randomButton(power) {
     var ret;
@@ -202,8 +205,9 @@ function randomButton(power) {
             powerCost: 200,
             power: power * (1 + (Math.random() * 0.35)),
             shardCost: 100,
-        }]
-        var ratio = [14,4,3,3];
+            costmult: 1,
+        }  ]
+        var ratio = [1,0.4,0.3,0.3];
         var sum = 0,check;
         for(var i=0;i<ratio.length;i++) sum+=ratio[i];
         var rand = Math.random()*sum;
@@ -215,8 +219,9 @@ function randomButton(power) {
     ret.basePower=ret.power;
     ret.baseSpeedCost=ret.speedCost;
     ret.basePowerCost=ret.powerCost;
-    ret.shardUse=false;
-    ret.shardGain=false;
+    ret.shardUse = false;
+    ret.shardGain = false;
+    if (ret.type == "force") show("forcearea");
     ret.element = renderButton(ret); //at some point: skip rendering buttons that won't be seen
     return ret;
 }
@@ -264,12 +269,15 @@ function SelectTarget(id) {
     if(player.mode.name=="target" && player.mode.id == id) {
         player.mode.name="click";
         player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = "Select target";
+        button.target = -1;
+        updateModeVisuals();
         return;
     }
     if(player.buttons[id].disabled) return;
     player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = '<b>Choose target</b>';
     player.mode.name = "target";
     player.mode.id = id;
+    updateModeVisuals();
     player.buttons[id].disabled = true;
 }
 
@@ -283,13 +291,23 @@ function update(set, to) {
 
 function updateButtonStats(button)
 {
-    if(button.type=="shards" || button.type=="create" )button.element.getElementsByClassName("id")[0].innerHTML=button.id;
+    if(button.type!="speed" && button.type!="power" )button.element.getElementsByClassName("id")[0].innerHTML=button.id;
     button.element.getElementsByClassName("time")[0].innerHTML=(button.speed / 1000).toFixed(1)+'s ('+button.speedCost.toFixed(1)+')';
     button.element.getElementsByClassName("time")[1].innerHTML=(button.speed / 1000).toFixed(1);
     button.element.getElementsByClassName("power")[0].innerHTML=button.power.toFixed(2)+'x ('+button.powerCost.toFixed(1)+')';
-    if(button.costmult){
+    if(button.costmult && button.type!="force"){
         button.element.getElementsByClassName("costmult")[0].innerHTML=button.costmult.toFixed(1);
     }  
+}
+
+function updateModeVisuals() {
+    if (player.mode.name == "target") {
+        for (var i = 0; i < player.buttons.length; i++) {
+            button = player.buttons[i];
+            if (player.buttons[player.mode.id].type == "speed") button.element.getElementsByClassName("time")[0].innerHTML = ' ' + (button.speedCost * player.buttons[player.mode.id].costmult).toFixed(1) + ' BS (' + ((button.speedCost * player.buttons[player.mode.id].costmult / player.buttons[player.mode.id].speed) * 1000).toFixed(2) + '/s)';
+            if (player.buttons[player.mode.id].type == "power") button.element.getElementsByClassName("power")[0].innerHTML = ' ' + (button.powerCost * player.buttons[player.mode.id].costmult).toFixed(1) + ' BS (' + ((button.powerCost * player.buttons[player.mode.id].costmult / player.buttons[player.mode.id].speed) * 1000).toFixed(2) + '/s)';
+        }
+    } else for (var i = 0; i < player.buttons.length; i++) updateButtonStats(player.buttons[i]);
 }
 
 function set_save(name, value) {
@@ -331,7 +349,8 @@ function init() {
         },
         clicks: 0,
         buttonsmade: 0,
-        shards: 0
+        shards: 0,
+        force: 0,
     };
     window.loops = {}; //put setinterval ids here
     window.ft=0.02 //frametime
@@ -370,8 +389,11 @@ function init() {
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             }
         }
-        update("shardsbox",player.shards.toFixed(1));
+        update("shardsbox", player.shards.toFixed(1));
+        update("forcebox", player.force.toFixed(1));
+
     }, 20);
+    
     //autosave
     loops.autosave = setInterval(function() {
         set_save("autosave", player);
@@ -383,7 +405,8 @@ function init() {
 
     if (save_data) {
         player = save_data;
-        if(player.buttonsmade>=1)show("shardsarea");
+        if (player.buttonsmade >= 1) show("shardsarea");
+        if (player.force > 0) show("forcearea");
         update("shardsbox",player.shards.toFixed(1));
         player.buttons[0].element = document.getElementById("firstbutton");
         updateButtonStats(player.buttons[0]);
@@ -395,7 +418,7 @@ function init() {
 }
 
 function reset() {
-    document.getElementById("BtnTable").innerHTML = '<tr id="rowcreate"><td><div onclick="ButtonClick(0)" id="firstbutton" class="button"><b>Create a new button</b><br>Power: <span class="power">1.00x (50.0)</span><br>Time: <span class="time">5.0s (25.0)</span><br><span class="timeleft">0.0</span>/<span class="time">5.0</span><br>ID: <span class="id"></span></div></td></tr><tr id="rowshards"></tr><tr id="rowspeed"></tr><tr id="rowpower"></tr>';
+    document.getElementById("BtnTable").innerHTML = '<tr id="rowcreate"><td><div onclick="ButtonClick(0)" id="firstbutton" class="button"><b>Create a new button</b><br>Power: <span class="power">1.00x (50.0)</span><br>Time: <span class="time">5.0s (25.0)</span><br><span class="timeleft">0.0</span>/<span class="time">5.0</span><br>ID: <span class="id"></span></div></td></tr><tr id="rowshards"></tr><tr id="rowspeed"></tr><tr id="rowpower"></tr><tr id="rowforce"></tr>';
     player = {
         buttons: [{
             type: "create",
@@ -421,9 +444,11 @@ function reset() {
         },
         clicks: 0,
         buttonsmade: 0,
-        shards: 0
+        shards: 0,
+        force:0
     };
-        document.getElementById("shardsarea").classList.add("hidden");
+    document.getElementById("shardsarea").classList.add("hidden");
+    document.getElementById("forcesarea").classList.add("hidden");
         update("shardsbox",player.shards.toFixed(1));
         updateButtonStats(player.buttons[0]);
 }
