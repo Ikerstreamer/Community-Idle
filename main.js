@@ -1,4 +1,5 @@
 var speedup = 20; //set to 1 for normal speed. Change for testing
+var id=1; //to check if rawgit updated
 function ButtonClick(id) {
     var button = player.buttons[id];
     switch (player.mode.name) {
