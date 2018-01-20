@@ -252,6 +252,7 @@ function randomButton(power) {
     ret.basePowerCost = ret.powerCost;
     ret.shardUse = false;
     ret.shardGain = false;
+    ret.forceUse = false;
     if (ret.type == "force") show("forcearea");
     ret.element = renderButton(ret); //at some point: skip rendering buttons that won't be seen
     return ret;
