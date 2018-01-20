@@ -22,4 +22,13 @@ body {
     cursor: default;
 }
 
-
+.autoslot {
+    border-style: solid;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: darkred;
+    cursor: pointer;
+    width: 180px;
+    text-align: center;
+    border-color: aqua;
+}
