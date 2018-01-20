@@ -1,5 +1,5 @@
 var speedup = 20; //set to 1 for normal speed. Change for testing
-var id=1; //to check if rawgit updated
+var id=2; //to check if rawgit updated
 function ButtonClick(id) {
     var button = player.buttons[id];
     switch (player.mode.name) {
@@ -468,6 +468,8 @@ function reset() {
             type: "create",
             shardUse: false,
             shardGain: false,
+            forceUse: false,
+            forceGain: false,
             speed: 5000,
             baseSpeed: 5000,
             speedCost: 25,
