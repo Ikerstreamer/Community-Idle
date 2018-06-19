@@ -1,18 +1,26 @@
-var speedup = 20; //set to 1 for normal speed. Change for testing
+var speedup = 1; //set to 1 for normal speed. Change for testing
 var id=2; //to check if rawgit updated
-function ButtonClick(id) {
+function ButtonClick(id, forceClick) {
     var button = player.buttons[id];
-    switch (player.mode.name) {
+    let mode = player.mode.name;
+    if (forceClick) mode = "click"
+    switch (mode) {
         case "target":
             if (button.disabled && button.id == player.mode.id) {
                 button.disabled = false;
                 return;
             }
-            var dest = player.buttons[player.mode.id];
-            dest.target = button.id;
-            dest.element.getElementsByClassName("target")[0].innerHTML = "Target: " + button.id;
+            if (player.mode.auto) {
+                var dest = player.autoslots[player.mode.id];
+                dest.button = button.id;
+                dest.element.innerHTML = "Auto running button " + button.id;
+            } else {
+                var dest = player.buttons[player.mode.id];
+                dest.target = button.id;
+                dest.element.getElementsByClassName("target")[0].innerHTML = "Target: " + button.id;
+                player.buttons[player.mode.id].disabled;
+            }
             player.mode.name = "click";
-            player.buttons[player.mode.id].disabled;
             updateModeVisuals();
             break;
         case "delete":
@@ -79,7 +87,7 @@ function ButtonClick(id) {
                     break;
                 case "slot":
                     button.forcePerSec = (button.forceCost / button.speed) * 1000;
-                    button.forceUse += button.shardCost * button.costmult;
+                    button.forceUse += button.forceCost * button.costmult;
                     setClicked(button, true);
                     break;
                 default:
@@ -130,20 +138,25 @@ function buttonReward(button) {
             updateButtonStats(button);
             break;
         case "slot":
-            for (var i = 0; i < floor(button.power) ; i++) {
+            for (var i = 0; i < Math.floor(button.power) ; i++) {
                 var elem = document.createElement("div");
                 elem.classList = ["autoslot"];
                 elem.innerHTML = "Automatically runs a button";
+                
                 var td = document.createElement("td");
                 td.appendChild(elem);
                 document.getElementById("autoclickslot").appendChild(td);
                 var newslot = {
-                    id: player.autoslotsmade+i+1, 
+                    id: player.autoslotsmade+i, 
                     button: -1,
                     element: elem, 
-                    };
-            player.autoslots.push(newslot);
+                };
+                elem.onclick = function () { SelectTarget(newslot.id, true) };
+                player.autoslots.push(newslot);
             }
+            player.autoslotsmade += Math.floor(button.power);
+            updateButtonStats(button);
+            button.forceUse = false;
             break;
     }
 }
@@ -204,6 +217,7 @@ function randomButton(power) {
                     costmult: 1.0,
                     forceCost: 10,
                 };
+                break;
             default:
                 console.log("Um.");
         }
@@ -236,7 +250,7 @@ function randomButton(power) {
             speedCost: 100,
             powerCost: 200,
             power: power * (1 + (Math.random() * 0.35)),
-            shardCost: 100,
+            shardCost: 50,
             costmult: 1,
         }]
         var ratio = [1, 0.4, 0.3, 0.3];
@@ -302,20 +316,28 @@ function renderButton(button) {
     return elem;
 }
 
-function SelectTarget(id) {
+function SelectTarget(id, auto) {
+    if (auto == undefined) auto = false;
     if (player.mode.name == "target" && player.mode.id == id) {
         player.mode.name = "click";
-        player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = "Select target";
-        button.target = -1;
+        if (auto) {
+            player.autoslots[id].element.innerHTML = '<b>Automatically runs a button</b>';
+            player.autoslots[id].button = -1;
+        } else {
+            player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = "Select target";
+            player.buttons[id].target = -1;
+        }
         updateModeVisuals();
         return;
     }
     if (player.buttons[id].disabled) return;
-    player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = '<b>Choose target</b>';
+    if (auto) player.autoslots[id].element.innerHTML = '<b>Choose target</b>';
+    else player.buttons[id].element.getElementsByClassName("target")[0].innerHTML = '<b>Choose target</b>';
     player.mode.name = "target";
     player.mode.id = id;
+    player.mode.auto = auto;
     updateModeVisuals();
-    player.buttons[id].disabled = true;
+    if(!auto)player.buttons[id].disabled = true;
 }
 
 function show(thing) {
@@ -331,9 +353,11 @@ function updateButtonStats(button) {
     button.element.getElementsByClassName("time")[0].innerHTML = (button.speed / 1000).toFixed(1) + 's (' + button.speedCost.toFixed(1) + ')';
     button.element.getElementsByClassName("time")[1].innerHTML = (button.speed / 1000).toFixed(1);
     button.element.getElementsByClassName("power")[0].innerHTML = button.power.toFixed(2) + 'x (' + button.powerCost.toFixed(1) + ')';
-    if (button.costmult && (button.type != "force" || button.type != "slot")) {
+    console.log(button);
+    if (button.costmult && button.type != "force" && button.type != "slot") {
         button.element.getElementsByClassName("costmult")[0].innerHTML = button.costmult.toFixed(1);
     }
+    
 }
 
 function updateModeVisuals() {
@@ -382,26 +406,27 @@ function init() {
         autoslots:[],
         mode: {
             name: "click",
-            id: 0
+            id: 0,
+            auto: false,
         },
         clicks: 0,
         buttonsmade: 0,
         autoslotsmade: 0,
         shards: 0,
         force: 0,
-        shardsPerSec: 0,
+        shardPerSec: 0,
     };
     window.loops = {}; //put setinterval ids here
     window.ft = 0.02 //frametime
     //game loop
     loops.game = setInterval(function () {
-        player.shardsPerSec = 0;
+        player.shardPerSec = 0;
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
             if (!button.timeupdate) continue;
             if (button.shardUse != false) {
                 if (player.shards >= button.shardPerSec * ft * speedup) {
-                    player.shardPerSec -= button.shardsPerSec;
+                    player.shardPerSec -= button.shardPerSec;
                     player.shards -= button.shardPerSec * ft * speedup;
                     button.shardUse -= button.shardPerSec * ft * speedup;
                     if (button.shardUse <= 0) {
@@ -411,7 +436,7 @@ function init() {
                     button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
                 }
             } else if (button.shardGain != false) {
-                player.shardPerSec += button.shardsPerSec;
+                player.shardPerSec += button.shardPerSec;
                 player.shards += button.shardPerSec * ft * speedup;
                 button.shardGain -= button.shardPerSec * ft * speedup;
                 if (button.shardGain <= 0) {
@@ -420,17 +445,28 @@ function init() {
                 button.time += ft * speedup;
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             } else if (button.forceUse != false) {
-                player.shardPerSec += button.forcePerSec;
-                player.force -= button.forcePerSec * ft * speedup;
-                button.forceUse -= button.forcePerSec * ft * speedup;
-                if (button.forceGain <= 0) {
-                    setClicked(button, false);
+                if (player.force >= button.forcePerSec * ft * speedup) {
+                    player.force -= button.forcePerSec * ft * speedup;
+                    button.forceUse -= button.forcePerSec * ft * speedup;
+                    if (button.forceUse <= 0) {
+                        setClicked(button, false);
+                    }
+
+                    button.time += ft * speedup;
+                    button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
                 }
-                button.time += ft * speedup;
-                button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             } else {
                 button.time += ft * speedup;
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
+            }
+        }
+        for (var i = 0; i < player.autoslots.length; i++) {
+            let slot = player.autoslots[i];
+            if (slot.button > -1) {
+                let button = player.buttons[slot.button];
+                if (!button.disabled) {
+                    ButtonClick(slot.button, true);
+                }
             }
         }
         update("shardsbox", player.shards.toFixed(1));
@@ -458,6 +494,18 @@ function init() {
             player.buttons[i].element = renderButton(player.buttons[i]);
             updateButtonStats(player.buttons[i]);
         }
+        for (var i = 0; i < player.autoslots.length; i++) {
+            var elem = document.createElement("div");
+            elem.classList = ["autoslot"];
+            if (player.autoslots[i].button > -1) elem.innerHTML = "Auto running button " + player.autoslots[i].button;
+                else elem.innerHTML = "Automatically runs a button";
+            var td = document.createElement("td");
+            td.appendChild(elem);
+            document.getElementById("autoclickslot").appendChild(td);
+            player.autoslots[i].element = elem;
+            let temp = player.autoslots[i].id;
+            elem.onclick = function () { SelectTarget(temp, true) };
+        }
     }
 }
 
@@ -484,9 +532,11 @@ function reset() {
             id: 0,
             element: document.getElementById("firstbutton")
         }],
+        autoslots:[],
         mode: {
             name: "click",
-            id: 0
+            id: 0,
+            auto:false,
         },
         clicks: 0,
         buttonsmade: 0,
