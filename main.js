@@ -1,5 +1,5 @@
-var speedup = 10; //set to 1 for normal speed. Change for testing
-var id=2; //to check if rawgit updated
+var speedup = 1; //set to 1 for normal speed. Change for testing
+var id=3; //to check if rawgit updated
 function ButtonClick(id, forceClick) {
     var button = player.buttons[id];
     let mode = player.mode.name;
@@ -468,9 +468,15 @@ function init() {
         update("shardsbox", player.shards.toFixed(1));
         player.buttons[0].element = document.getElementById("firstbutton");
         updateButtonStats(player.buttons[0]);
+        if(player.buttons[0].disabled){
+            player.buttons[0].element.classList.add("disabled");
+        }
         for (var i = 1; i < player.buttons.length; i++) {
             player.buttons[i].element = renderButton(player.buttons[i]);
             updateButtonStats(player.buttons[i]);
+            if(player.buttons[i].disabled){
+                player.buttons[i].element.classList.add("disabled");
+            }
         }
         for (var i = 0; i < player.autoslots.length; i++) {
             var elem = document.createElement("div");
