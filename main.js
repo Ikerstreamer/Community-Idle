@@ -1,4 +1,4 @@
-var speedup = 1; //set to 1 for normal speed. Change for testing
+var speedup = 10; //set to 1 for normal speed. Change for testing
 var id=2; //to check if rawgit updated
 function ButtonClick(id, forceClick) {
     var button = player.buttons[id];
@@ -40,6 +40,7 @@ function ButtonClick(id, forceClick) {
             player.clicks++;
             switch (button.type) {
                 case "create": //create a button
+                    //TODO: Move to buttonReward
                     setTimeout(function () {
                         try {
                             setClicked(button, false);
@@ -81,12 +82,12 @@ function ButtonClick(id, forceClick) {
                     }
                     break;
                 case "force":
-                    button.shardPerSec = (button.shardCost / button.speed) * 1000;
+                    button.shardPerSec = (button.shardCost / button.speed) * 1000 * button.costmult;
                     button.shardUse += button.shardCost * button.costmult;
                     setClicked(button, true);
                     break;
                 case "slot":
-                    button.forcePerSec = (button.forceCost / button.speed) * 1000;
+                    button.forcePerSec = (button.forceCost / button.speed) * 1000 * button.costmult;
                     button.forceUse += button.forceCost * button.costmult;
                     setClicked(button, true);
                     break;
@@ -163,7 +164,7 @@ function buttonReward(button) {
 
 function randomButton(power) {
     var ret;
-    if (player.buttonsmade < 4 || player.buttonsmade == 8) { //first 3 buttons made are fixed
+    if (player.buttonsmade < 4 || player.buttonsmade == 8) { //first 4 buttons made and button 9 are fixed
         switch (player.buttonsmade) {
             case 0:
                 ret = {
@@ -219,7 +220,7 @@ function randomButton(power) {
                 };
                 break;
             default:
-                console.log("Um.");
+                console.log("TODO: Move the normal generation code here");
         }
     } else {
         var options = [{
@@ -254,7 +255,7 @@ function randomButton(power) {
             costmult: 1,
         }]
         var ratio = [1, 0.4, 0.3, 0.3];
-        var sum = 0, check;
+        var sum = 0;
         for (var i = 0; i < ratio.length; i++) sum += ratio[i];
         var rand = Math.random() * sum;
         for (check = 0; rand > ratio[check]; check++) rand -= ratio[check];
@@ -300,11 +301,11 @@ function renderButton(button) {
             break;
         case "force":
             desc = "Create slot force";
-            line5 = 'ID: <span class="id"></span> Shard cost: <span class=shardcost>' + button.shardCost + '</span>';
+            line5 = 'ID: <span class="id"></span> Shard cost: <span class=shardcost>' + (button.shardCost * button.costmult).toFixed(1) + '</span>';
             break;
         case "slot":
             desc = "Create auto click slot";
-            line5 = 'ID: <span class="id"></span> Force cost: <span class=shardcost>' + button.forceCost + '</span>';
+            line5 = 'ID: <span class="id"></span> Force cost: <span class=shardcost>' + (button.forceCost * button.costmult).toFixed(1) + '</span>';
             break;
     }
     elem.innerHTML = '<b>' + desc + '</b><br>Power: <span class="power">' + button.power.toFixed(2) + 'x (' + button.powerCost.toFixed(1) + ')</span><br>Speed: <span class="time">' + (button.speed / 1000).toFixed(1) + 's (' + button.speedCost.toFixed(1) + ')</span><br><span class="timeleft">0.0</span>/<span class="time">' + (button.speed / 1000).toFixed(1) + '</span><br>' + line5;
@@ -317,7 +318,7 @@ function renderButton(button) {
 }
 
 function SelectTarget(id, auto) {
-    if (auto == undefined) auto = false;
+    if (auto === undefined) auto = false;
     if (player.mode.name == "target" && player.mode.id == id) {
         player.mode.name = "click";
         if (auto) {
@@ -353,7 +354,7 @@ function updateButtonStats(button) {
     button.element.getElementsByClassName("time")[0].innerHTML = (button.speed / 1000).toFixed(1) + 's (' + button.speedCost.toFixed(1) + ')';
     button.element.getElementsByClassName("time")[1].innerHTML = (button.speed / 1000).toFixed(1);
     button.element.getElementsByClassName("power")[0].innerHTML = button.power.toFixed(2) + 'x (' + button.powerCost.toFixed(1) + ')';
-    console.log(button);
+    //console.log(button);
     if (button.costmult && button.type != "force" && button.type != "slot") {
         button.element.getElementsByClassName("costmult")[0].innerHTML = button.costmult.toFixed(1);
     }
@@ -386,77 +387,54 @@ function get_save(name) {
 
 
 function init() {
-    window.player = {
-        buttons: [{
-            type: "create",
-            shardUse: false,
-            shardGain: false,
-            speed: 5000,
-            baseSpeed: 5000,
-            speedCost: 25,
-            baseSpeedCost: 25,
-            power: 1.0,
-            basePower: 1.0,
-            powerCost: 50,
-            basePowerCost: 50,
-            disabled: false,
-            id: 0,
-            element: document.getElementById("firstbutton")
-        }],
-        autoslots:[],
-        mode: {
-            name: "click",
-            id: 0,
-            auto: false,
-        },
-        clicks: 0,
-        buttonsmade: 0,
-        autoslotsmade: 0,
-        shards: 0,
-        force: 0,
-        shardPerSec: 0,
-    };
+    reset()
     window.loops = {}; //put setinterval ids here
     window.ft = 0.02 //frametime
     //game loop
     loops.game = setInterval(function () {
         player.shardPerSec = 0;
+        var eft = ft * speedup //effective frametime
         for (var i = 0; i < player.buttons.length; i++) {
             var button = player.buttons[i];
             if (!button.timeupdate) continue;
             if (button.shardUse != false) {
-                if (player.shards >= button.shardPerSec * ft * speedup) {
+                var shardPerFrame = button.shardPerSec * eft
+                if (player.shards >= shardPerFrame) {
                     player.shardPerSec -= button.shardPerSec;
-                    player.shards -= button.shardPerSec * ft * speedup;
-                    button.shardUse -= button.shardPerSec * ft * speedup;
+                    player.shards -= shardPerFrame;
+                    button.shardUse -= shardPerFrame;
                     if (button.shardUse <= 0) {
                         setClicked(button, false);
+                        player.shards -= button.shardUse
                     }
-                    button.time += ft * speedup;
+                    button.time += eft;
                     button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
                 }
             } else if (button.shardGain != false) {
+                var shardPerFrame = button.shardPerSec * eft
                 player.shardPerSec += button.shardPerSec;
-                player.shards += button.shardPerSec * ft * speedup;
-                button.shardGain -= button.shardPerSec * ft * speedup;
+                player.shards += shardPerFrame
+                button.shardGain -= shardPerFrame;
                 if (button.shardGain <= 0) {
                     setClicked(button, false);
+                    player.shards += button.shardGain
                 }
-                button.time += ft * speedup;
+                button.time += eft;
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             } else if (button.forceUse != false) {
-                if (player.force >= button.forcePerSec * ft * speedup) {
-                    player.force -= button.forcePerSec * ft * speedup;
-                    button.forceUse -= button.forcePerSec * ft * speedup;
+                var forcePerFrame = button.forcePerSec * eft
+                if (player.force >= forcePerFrame) {
+                    player.force -= forcePerFrame;
+                    button.forceUse -= forcePerFrame;
                     if (button.forceUse <= 0) {
                         setClicked(button, false);
+                        player.force -= button.forceUse
                     }
-
-                    button.time += ft * speedup;
+                    button.time += eft;
                     button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
                 }
             } else {
-                button.time += ft * speedup;
+                button.time += eft;
                 button.element.getElementsByClassName("timeleft")[0].innerHTML = button.time.toFixed(1);
             }
         }
